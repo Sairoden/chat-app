@@ -1,3 +1,5 @@
+import "../App.css";
+
 const Message = ({ text, createdAt, myLocation }) => {
   return (
     <div className="message">
