@@ -1,20 +1,53 @@
-const express = require("express");
-const path = require("path");
+const http = require("http");
+const app = require("./app");
+const socketio = require("socket.io");
+const Filter = require("bad-words");
 
-const app = express();
+const {
+  generateMessage,
+  generateLocationMessage,
+} = require("./utils/messages");
 
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
-// Serve public
-app.use(express.static(path.join(__dirname, "..", "public")));
-app.all("*", (req, res, next) => {
-  return res
-    .status(200)
-    .sendFile(path.join(__dirname, "..", "public", "index.html"));
+const server = http.createServer(app);
+const io = socketio(server);
+
+io.on("connection", socket => {
+  socket.on("sendMessage", (message, callback) => {
+    const filter = new Filter();
+
+    if (filter.isProfane(message)) return callback("Bad words aren't allowed");
+
+    io.emit("sendMessage", generateMessage(message));
+  });
+
+  socket.on("sendLocation", myLocation => {
+    io.emit("sendLocation", generateLocationMessage(myLocation));
+  });
 });
 
-const PORT = 3000;
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Listening on PORT ${PORT}`);
 });
+
+process.on("unhandledRejection", err => {
+  console.log("UNHANDLED REJECTION! 💥 Shutting down...");
+  console.log(err.name, err.message);
+  server.close(() => process.exit(1));
+});
+
+process.on("SIGTERM", () => {
+  console.log("🤯 SIGTERM RECEIVED. Shutting down gracefully");
+  server.close(() => {
+    console.log("💥 Process terminated!");
+  });
+});
+
+process.on("uncaughtException", err => {
+  console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
+// 13 - Working with Time
