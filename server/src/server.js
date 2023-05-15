@@ -28,27 +28,37 @@ io.on("connection", socket => {
 
     if (error) return callback(error);
 
-    console.log(user);
-
     socket.join(user.room);
 
     socket.broadcast
       .to(user.room)
-      .emit("message", generateMessage(`${user.username} has joined the chat`));
-
-    callback();
+      .emit(
+        "sendMessage",
+        generateMessage(user.username, `${user.username} has joined the chat`)
+      );
   });
 
-  socket.on("sendMessage", (message, callback) => {
+  socket.on("sendMessage", (userData, callback) => {
+    const user = getUser(socket.id);
+
     const filter = new Filter();
 
-    if (filter.isProfane(message)) return callback("Bad words aren't allowed");
+    if (filter.isProfane(userData.message))
+      return callback("Bad words aren't allowed");
 
-    io.to("avengers").emit("sendMessage", generateMessage(message));
+    io.to(user.room).emit(
+      "sendMessage",
+      generateMessage(userData.username, userData.message)
+    );
   });
 
-  socket.on("sendLocation", myLocation => {
-    io.emit("sendLocation", generateLocationMessage(myLocation));
+  socket.on("sendLocation", locationData => {
+    const user = getUser(socket.id);
+
+    io.to(user.room).emit(
+      "sendLocation",
+      generateLocationMessage(locationData.username, locationData.myLocation)
+    );
   });
 
   socket.on("disconnect", () => {
@@ -57,7 +67,10 @@ io.on("connection", socket => {
     if (user)
       socket.broadcast
         .to(user.room)
-        .emit("message", generateMessage(`${user.username} hasleft the chat`));
+        .emit(
+          "sendMessage",
+          generateMessage(user.username, `${user.username} has left the chat`)
+        );
   });
 });
 
@@ -84,4 +97,4 @@ process.on("uncaughtException", err => {
   process.exit(1);
 });
 
-// 18
+

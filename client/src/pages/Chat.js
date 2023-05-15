@@ -8,9 +8,8 @@ import Message from "../components/Message";
 import { useUserContext } from "../context/UserContext";
 
 const Chat = () => {
-  const { user } = useUserContext();
-
   const [messages, setMessages] = useState([]);
+  const { user } = useUserContext();
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -19,7 +18,9 @@ const Chat = () => {
 
     if (!message.length > 0) return;
 
-    socket.emit("sendMessage", message);
+    const userData = { message, username: user.username };
+
+    socket.emit("sendMessage", userData);
 
     e.target.messageInput.value = "";
   };
@@ -31,41 +32,38 @@ const Chat = () => {
       const { latitude, longitude } = position.coords;
       let myLocation = `https://www.google.com/maps/@${latitude},${longitude}`;
 
-      socket.emit("sendLocation", myLocation);
+      const locationData = { username: user.username, myLocation };
+
+      socket.emit("sendLocation", locationData);
     });
   };
 
   useEffect(() => {
     socket.on("sendMessage", message => {
-      let { text, createdAt } = message;
+      let { text, createdAt, username } = message;
 
       createdAt = moment(createdAt).format("h:mm A");
 
-      const newMessage = { text, createdAt };
+      const newMessage = { username, text, createdAt };
 
       setMessages([...messages, newMessage]);
-      console.log(message);
-
-      console.log(messages.length);
     });
   }, [messages]);
 
   useEffect(() => {
     socket.on("sendLocation", myLocation => {
-      const date = moment(myLocation.createdAt).format("MMM Do YYYY, h:mm A ");
+      const { createdAt, url, username } = myLocation;
+      const date = moment(createdAt).format("MMM Do YYYY, h:mm A ");
 
       const newLocation = {
-        myLocation: myLocation.url,
+        username: username,
+        myLocation: url,
         createdAt: date,
       };
 
       setMessages([...messages, newLocation]);
     });
   }, [messages]);
-
-  socket.on("message", message => {
-    socket.emit("sendMessage", message.text);
-  });
 
   return (
     <div className="chat">
@@ -79,7 +77,7 @@ const Chat = () => {
                 text={message.text}
                 createdAt={message.createdAt}
                 myLocation={message.myLocation}
-                username={user.username}
+                username={message.username}
               />
             ))}
         </div>
@@ -90,6 +88,8 @@ const Chat = () => {
               id="message"
               placeholder="Message"
               name="messageInput"
+              required
+              autoComplete="off"
             />
             <button>Submit</button>
           </form>
