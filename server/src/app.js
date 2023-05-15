@@ -14,5 +14,3 @@ app.all("*", (req, res, next) => {
 });
 
 module.exports = app;
-
-// 8 ka na

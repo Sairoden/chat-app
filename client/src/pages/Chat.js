@@ -5,8 +5,11 @@ import { socket } from "../socket";
 
 // Component
 import Message from "../components/Message";
+import { useUserContext } from "../context/UserContext";
 
 const Chat = () => {
+  const { user } = useUserContext();
+
   const [messages, setMessages] = useState([]);
 
   const handleSubmit = e => {
@@ -41,6 +44,7 @@ const Chat = () => {
       const newMessage = { text, createdAt };
 
       setMessages([...messages, newMessage]);
+      console.log(message);
 
       console.log(messages.length);
     });
@@ -59,6 +63,10 @@ const Chat = () => {
     });
   }, [messages]);
 
+  socket.on("message", message => {
+    socket.emit("sendMessage", message.text);
+  });
+
   return (
     <div className="chat">
       <div className="chat__sidebar"></div>
@@ -71,6 +79,7 @@ const Chat = () => {
                 text={message.text}
                 createdAt={message.createdAt}
                 myLocation={message.myLocation}
+                username={user.username}
               />
             ))}
         </div>

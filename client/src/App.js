@@ -1,5 +1,5 @@
 import "./App.css";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import Chat from "./pages/Chat";
 import Lobby from "./pages/Lobby";
@@ -9,6 +9,7 @@ function App() {
     <Routes>
       <Route index element={<Lobby />} />
       <Route path="/chat" element={<Chat />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

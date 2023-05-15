@@ -1,7 +1,16 @@
+// Libraries
 const http = require("http");
 const app = require("./app");
 const socketio = require("socket.io");
 const Filter = require("bad-words");
+
+// Utilities
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom,
+} = require("./utils/users");
 
 const {
   generateMessage,
@@ -14,16 +23,41 @@ const server = http.createServer(app);
 const io = socketio(server);
 
 io.on("connection", socket => {
+  socket.on("join", ({ username, room }, callback) => {
+    const { error, user } = addUser({ id: socket.id, username, room });
+
+    if (error) return callback(error);
+
+    console.log(user);
+
+    socket.join(user.room);
+
+    socket.broadcast
+      .to(user.room)
+      .emit("message", generateMessage(`${user.username} has joined the chat`));
+
+    callback();
+  });
+
   socket.on("sendMessage", (message, callback) => {
     const filter = new Filter();
 
     if (filter.isProfane(message)) return callback("Bad words aren't allowed");
 
-    io.emit("sendMessage", generateMessage(message));
+    io.to("avengers").emit("sendMessage", generateMessage(message));
   });
 
   socket.on("sendLocation", myLocation => {
     io.emit("sendLocation", generateLocationMessage(myLocation));
+  });
+
+  socket.on("disconnect", () => {
+    const user = removeUser(socket.id);
+
+    if (user)
+      socket.broadcast
+        .to(user.room)
+        .emit("message", generateMessage(`${user.username} hasleft the chat`));
   });
 });
 
@@ -50,4 +84,4 @@ process.on("uncaughtException", err => {
   process.exit(1);
 });
 
-// 13 - Working with Time
+// 18

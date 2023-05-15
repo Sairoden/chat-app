@@ -1,10 +1,10 @@
 import "../App.css";
 
-const Message = ({ text, createdAt, myLocation }) => {
+const Message = ({ text, createdAt, myLocation, username }) => {
   return (
     <div className="message">
       <p>
-        <span className="message__name">Some user name</span>
+        <span className="message__name">{username}</span>
         <span className="message__meta">{createdAt}</span>
       </p>
       <p>

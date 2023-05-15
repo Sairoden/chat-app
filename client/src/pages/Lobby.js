@@ -1,9 +1,27 @@
 import { useNavigate } from "react-router-dom";
+import { useUserContext } from "../context/UserContext";
+import { socket } from "../socket";
 
 const Lobby = () => {
   const navigate = useNavigate();
+  const { setUser } = useUserContext();
 
-  const handleSubmit = () => {
+  const handleSubmit = e => {
+    const { username, room } = e.target;
+
+    const newUser = {
+      username: username.value,
+      room: room.value,
+    };
+
+    socket.emit("join", newUser, error => {
+      if (error) {
+        alert(error);
+        navigate("/");
+      }
+    });
+
+    setUser(newUser);
     navigate("/chat");
   };
 
