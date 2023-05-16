@@ -6,9 +6,12 @@ import { socket } from "../socket";
 // Component
 import Message from "../components/Message";
 import { useUserContext } from "../context/UserContext";
+import Sidebar from "../components/Sidebar";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
+  const [usersInRoom, setUsersInRoom] = useState({});
+
   const { user } = useUserContext();
 
   const handleSubmit = e => {
@@ -61,13 +64,21 @@ const Chat = () => {
         createdAt: date,
       };
 
-      setMessages([...messages, newLocation]);
+      setMessages(newLocation);
     });
   }, [messages]);
 
+  useEffect(() => {
+    socket.on("roomData", ({ room, users }) => {
+      setUsersInRoom({ room, users });
+    });
+  }, [usersInRoom]);
+
   return (
     <div className="chat">
-      <div className="chat__sidebar"></div>
+      <div className="chat__sidebar">
+        <Sidebar {...usersInRoom} />
+      </div>
       <div className="chat__main">
         <div className="chat__messages">
           {messages &&

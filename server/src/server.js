@@ -36,6 +36,11 @@ io.on("connection", socket => {
         "sendMessage",
         generateMessage(user.username, `${user.username} has joined the chat`)
       );
+
+    io.to(user.room).emit("roomData", {
+      room: user.room,
+      users: getUsersInRoom(user.room),
+    });
   });
 
   socket.on("sendMessage", (userData, callback) => {
@@ -64,13 +69,19 @@ io.on("connection", socket => {
   socket.on("disconnect", () => {
     const user = removeUser(socket.id);
 
-    if (user)
+    if (user) {
       socket.broadcast
         .to(user.room)
         .emit(
           "sendMessage",
           generateMessage(user.username, `${user.username} has left the chat`)
         );
+
+      io.to(user.room).emit("roomData", {
+        room: user.room,
+        users: getUsersInRoom(user.room),
+      });
+    }
   });
 });
 
@@ -97,4 +108,4 @@ process.on("uncaughtException", err => {
   process.exit(1);
 });
 
-
+// 22 ka  na
