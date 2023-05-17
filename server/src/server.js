@@ -108,4 +108,4 @@ process.on("uncaughtException", err => {
   process.exit(1);
 });
 
-// 22 ka  na
+// 23 ka  na
